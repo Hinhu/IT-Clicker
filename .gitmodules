@@ -1,0 +1,9 @@
+[submodule "codePreper/repos/shooter"]
+	path = codePreper/repos/shooter
+	url = git@github.com:Hinhu/Shooter.git
+[submodule "codePreper/repos/3D_VTK"]
+	path = codePreper/repos/3D_VTK
+	url = git@github.com:Hinhu/3D_VTK.git
+[submodule "codePreper/repos/compare"]
+	path = codePreper/repos/compare
+	url = git@github.com:Hinhu/FrontEnd_Compare.git
