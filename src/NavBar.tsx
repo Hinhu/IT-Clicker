@@ -11,7 +11,7 @@ function Item() {
 function NavBar() {
 
   return (
-    <div className="flex flex-col border border-solid border-black h-screen max-w-xs flex-grow-0">
+    <div className="flex flex-col border border-solid border-black h-screen w-52 flex-grow-0">
       <Item />
       <Item />
       <Item />
