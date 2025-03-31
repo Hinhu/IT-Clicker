@@ -29,30 +29,6 @@ const EXTENTIONS = [
   '.js',
 ];
 
-const NON_REDACTED_CHARACTERS = ' .,(){}[]!=-+*%/\'"<>?:;`&|';
-const NON_REDACTED_WORDS = ['class', 'function', 'extends', 'const', 'let', 'var', 'typeof', 'async', 'await']
-
-/*
-const codePaths = EXTENTIONS.reduce((acc, ext) => acc.concat(findFilesInDir('./repos', ext)),[]);
-
-const codes = codePaths.map((codePath) => fs.readFileSync(codePath, { encoding: 'utf8', flag: 'r' }));
-
-fs.writeFileSync('../code.json', JSON.stringify(codes));
-*/
-
-const getClassFromColor = (color) => `color-[${color}] whitespace-pre`
-
-const SHJ_CLASS_TO_TAILWIND = {
-  'shj-syn-kwd': getClassFromColor('#569cd6'),
-  'shj-syn-class': getClassFromColor('#4fc1ff'),
-  'shj-syn-oper': getClassFromColor('#d4d4d4'),
-  'shj-syn-func': getClassFromColor('#dcdcaa'),
-  'shj-syn-str': getClassFromColor('#ce9178'),
-  'shj-syn-num': getClassFromColor('#569cd6'),
-  'shj-syn-bool': getClassFromColor('#b5cea8'),
-  'shj-syn-var': getClassFromColor('#9cdcfe')
-}
-
 const codePaths = EXTENTIONS.reduce((acc, ext) => acc.concat(findFilesInDir('./repos', ext)), []);
 let prepedCodes = [];
 
@@ -63,19 +39,7 @@ for (let codePath of codePaths) {
   const parsedHtml = parse(html);
 
   const codeMap = parsedHtml.childNodes[0].childNodes[1].childNodes.map((node) => ({
-    className: ((className) => {
-      if (className) {
-        const mappedClass = SHJ_CLASS_TO_TAILWIND[className];
-
-        if (!mappedClass) {
-          throw new Error('No mapping for class ' + className)
-        }
-
-        return className;
-      }
-
-      return 'shj-syn-oper'
-    })(node.getAttribute && node.getAttribute('class')),
+    className: ((className) => className || 'shj-syn-oper')(node.getAttribute && node.getAttribute('class')),
     text: node.text
   }))
 
