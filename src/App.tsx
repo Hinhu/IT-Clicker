@@ -5,7 +5,7 @@ import Typer from './Typer';
 
 function App() {
   return (
-    <div className="flex">
+    <div className="flex flex-grow overflow-hidden">
       <NavBar />
       <Typer />
     </div>

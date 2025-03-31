@@ -1,39 +1,88 @@
-const fs = require('node:fs');
-const path = require('path');
+import fs from 'node:fs';
+import path from 'path';
+import { highlightText } from '@speed-highlight/core';
+import { parse } from 'node-html-parser';
 
-function findFilesInDir(startPath, filter){
-
+function findFilesInDir(startPath, filter) {
   var results = [];
 
-  if (!fs.existsSync(startPath)){
-      console.log("no dir ",startPath);
-      return;
+  if (!fs.existsSync(startPath)) {
+    console.log("no dir ", startPath);
+    return;
   }
 
-  var files=fs.readdirSync(startPath);
-  for(var i=0;i<files.length;i++){
-      var filename=path.join(startPath,files[i]);
-      var stat = fs.lstatSync(filename);
-      if (stat.isDirectory()){
-          results = results.concat(findFilesInDir(filename,filter)); //recurse
-      }
-      else if (filename.indexOf(filter)>=0) {
-          results.push(filename);
-      }
+  var files = fs.readdirSync(startPath);
+  for (var i = 0; i < files.length; i++) {
+    var filename = path.join(startPath, files[i]);
+    var stat = fs.lstatSync(filename);
+    if (stat.isDirectory()) {
+      results = results.concat(findFilesInDir(filename, filter)); //recurse
+    }
+    else if (filename.indexOf(filter) >= 0) {
+      results.push(filename);
+    }
   }
   return results;
 }
 
 const EXTENTIONS = [
-  '.java',
   '.js',
-  '.css',
-  '.html',
-  '.py'
 ];
 
+const NON_REDACTED_CHARACTERS = ' .,(){}[]!=-+*%/\'"<>?:;`&|';
+const NON_REDACTED_WORDS = ['class', 'function', 'extends', 'const', 'let', 'var', 'typeof', 'async', 'await']
+
+/*
 const codePaths = EXTENTIONS.reduce((acc, ext) => acc.concat(findFilesInDir('./repos', ext)),[]);
 
 const codes = codePaths.map((codePath) => fs.readFileSync(codePath, { encoding: 'utf8', flag: 'r' }));
 
 fs.writeFileSync('../code.json', JSON.stringify(codes));
+*/
+
+const getClassFromColor = (color) => `color-[${color}] whitespace-pre`
+
+const SHJ_CLASS_TO_TAILWIND = {
+  'shj-syn-kwd': getClassFromColor('#569cd6'),
+  'shj-syn-class': getClassFromColor('#4fc1ff'),
+  'shj-syn-oper': getClassFromColor('#d4d4d4'),
+  'shj-syn-func': getClassFromColor('#dcdcaa'),
+  'shj-syn-str': getClassFromColor('#ce9178'),
+  'shj-syn-num': getClassFromColor('#569cd6'),
+  'shj-syn-bool': getClassFromColor('#b5cea8'),
+  'shj-syn-var': getClassFromColor('#9cdcfe')
+}
+
+const codePaths = EXTENTIONS.reduce((acc, ext) => acc.concat(findFilesInDir('./repos', ext)), []);
+let prepedCodes = [];
+
+for (let codePath of codePaths) {
+  const code = fs.readFileSync(codePath, { encoding: 'utf8', flag: 'r' });
+  const html = await highlightText(code, 'js', true, { hideLineNumbers: true });
+
+  const parsedHtml = parse(html);
+
+  const codeMap = parsedHtml.childNodes[0].childNodes[1].childNodes.map((node) => ({
+    className: ((className) => {
+      if (className) {
+        const mappedClass = SHJ_CLASS_TO_TAILWIND[className];
+
+        if (!mappedClass) {
+          throw new Error('No mapping for class ' + className)
+        }
+
+        return className;
+      }
+
+      return 'shj-syn-oper'
+    })(node.getAttribute && node.getAttribute('class')),
+    text: node.text
+  }))
+
+  prepedCodes = [...prepedCodes, codeMap];
+  fs.writeFileSync('../code.html', html);
+}
+
+
+fs.writeFileSync('../code.json', JSON.stringify(prepedCodes));
+
