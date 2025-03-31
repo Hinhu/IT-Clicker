@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import './css/speed-highlight-override.css';
-import shuffle from './utils/shuffle';
-import codes from './code.json';
+import '../css/speed-highlight-override.css';
+import shuffle from '../utils/shuffle';
+import codes from '../assets/code.json';
 
 const linesCountInc = 3;
 
@@ -59,10 +59,16 @@ function Typer() {
         newState.linesDisplayed = prev.linesDisplayed.concat(codes[prev.currentCodeIndex].slice(prevLinesDisplayedLength, prevLinesDisplayedLength + linesInc));
       } else {
         const numOfElementsFromNextFile = prevLinesDisplayedLength + linesInc - codes[prev.currentCodeIndex].length;
+
         newState.currentCodeIndex = nextCodeIndex;
+
+        console.log({prevLinesDisplayedLength, linesInc, codeLength: codes[prev.currentCodeIndex].length, numOfElementsFromNextFile },
+          codes[prev.currentCodeIndex].slice(prevLinesDisplayedLength, codes[prev.currentCodeIndex].length),
+          codes[nextCodeIndex].slice(0, numOfElementsFromNextFile)
+        )
         newState.linesDisplayed = [
           ...prev.linesDisplayed,
-          ...codes[prev.currentCodeIndex].slice(prevLinesDisplayedLength, codes[prev.currentCodeIndex].length - 1),
+          ...codes[prev.currentCodeIndex].slice(prevLinesDisplayedLength, codes[prev.currentCodeIndex].length),
           ...codes[nextCodeIndex].slice(0, numOfElementsFromNextFile)
         ];
       }
@@ -71,33 +77,6 @@ function Typer() {
     })
   }, [linesCount]);
 
-
-
-  /*
-  useEffect(() => {
-    let timer: NodeJS.Timer;
-    const { currentCodeIndex, linesDisplayed: lines, codesOrder } = typerState;
-    if (currentCodeIndex !== undefined && codesOrder.length > 0) {
-      timer = setInterval(() => {
-        let splittedCode = codes[codesOrder[currentCodeIndex]];
-        if (lines.length < splittedCode.length) {
-          setTyperState((prev) => ({
-            ...prev,
-            linesDisplayed: [...prev.linesDisplayed, splittedCode[prev.linesDisplayed.length]]
-          }));
-        } else {
-          setTyperState((prev) => ({
-            ...prev,
-            linesDisplayed: [],
-            currentCodeIndex: prev.currentCodeIndex + 1 === prev.codesOrder.length ? 0 : prev.currentCodeIndex + 1
-          }));
-        }
-      }, 10);
-    }
-
-    return () => clearInterval(timer);
-  }, [typerState])
-  */
 
   useEffect(() => {
     if (codeWindowRef.current) {

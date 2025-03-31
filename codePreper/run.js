@@ -44,9 +44,8 @@ for (let codePath of codePaths) {
   }))
 
   prepedCodes = [...prepedCodes, codeMap];
-  fs.writeFileSync('../code.html', html);
 }
 
 
-fs.writeFileSync('../code.json', JSON.stringify(prepedCodes));
+fs.writeFileSync('./code.json', JSON.stringify(prepedCodes));
 

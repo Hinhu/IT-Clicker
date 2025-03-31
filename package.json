@@ -22,7 +22,8 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "prep:code": "cd codePreper && node run.js && mv code.json ../src/assets/code.json && cd .."
   },
   "eslintConfig": {
     "extends": [
