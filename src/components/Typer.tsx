@@ -2,11 +2,14 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import '../css/speed-highlight-override.css';
 import shuffle from '../utils/shuffle';
 import codes from '../assets/code.json';
-
-const linesCountInc = 50;
+import useLinesCount from '../hooks/useLinesCount';
+import useLinesIncrement from '../hooks/useLinesIncrement';
+import useLinesKeyboardClick from '../hooks/useLinesKeyboardClick';
 
 function Typer() {
-  const [linesCount, setLinesCount] = useState<number>(0);
+  const linesCount = useLinesCount();
+  const incrementLines = useLinesIncrement();
+  const keyboardLinesIncrement = useLinesKeyboardClick();
   const [displayState, setDisplayState] = useState<{
     codesOrder: number[],
     currentCodeIndex: number,
@@ -28,8 +31,8 @@ function Typer() {
   }, []);
 
   const handleUserKeyPress = useCallback(() => {
-    setLinesCount((prev) => prev + 1);
-  }, []);
+    keyboardLinesIncrement();
+  }, [keyboardLinesIncrement]);
 
   useEffect(() => {
     window.addEventListener("keydown", handleUserKeyPress);
@@ -42,11 +45,11 @@ function Typer() {
     let timer: NodeJS.Timer;
 
     timer = setInterval(() => {
-      setLinesCount((prev) => prev + linesCountInc);
+      incrementLines();
     }, 1000);
 
     return () => clearInterval(timer);
-  }, []);
+  }, [incrementLines]);
 
   useEffect(() => {
     setDisplayState((prev) => {
@@ -73,7 +76,7 @@ function Typer() {
         ];
         newState.linesOfCurrentCodeFileDisplayed = numOfElementsFromNextFile;
       }
-      console.log({newState})
+
       return newState;
     })
   }, [linesCount]);
