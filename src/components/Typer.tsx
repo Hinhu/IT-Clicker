@@ -3,20 +3,22 @@ import '../css/speed-highlight-override.css';
 import shuffle from '../utils/shuffle';
 import codes from '../assets/code.json';
 
-const linesCountInc = 3;
+const linesCountInc = 50;
 
 function Typer() {
   const [linesCount, setLinesCount] = useState<number>(0);
   const [displayState, setDisplayState] = useState<{
-    codesOrder: number[] | undefined,
+    codesOrder: number[],
     currentCodeIndex: number,
     linesDisplayed: { className: string, text: string }[],
     linesDisplayedCount: number,
+    linesOfCurrentCodeFileDisplayed: number
   }>({
     codesOrder: [],
     currentCodeIndex: 0,
     linesDisplayed: [],
-    linesDisplayedCount: 0
+    linesDisplayedCount: 0,
+    linesOfCurrentCodeFileDisplayed: 0
   });
   const codeWindowRef = useRef<HTMLDivElement | null>(null);
 
@@ -50,29 +52,28 @@ function Typer() {
     setDisplayState((prev) => {
       const newState = { ...prev };
       const linesInc = Math.floor(linesCount) - prev.linesDisplayedCount;
-      const nextCodeIndex = prev.currentCodeIndex + 1 === codes.length ? 0 : prev.currentCodeIndex + 1;
-      const prevLinesDisplayedLength = prev.linesDisplayed.length;
-      
+      const currentCodeFile = codes[prev.codesOrder[prev.currentCodeIndex]];
+
       newState.linesDisplayedCount += linesInc;
 
-      if (prevLinesDisplayedLength + linesInc <= codes[prev.currentCodeIndex].length) {
-        newState.linesDisplayed = prev.linesDisplayed.concat(codes[prev.currentCodeIndex].slice(prevLinesDisplayedLength, prevLinesDisplayedLength + linesInc));
+      if (prev.linesOfCurrentCodeFileDisplayed + linesInc < currentCodeFile.length) {
+        newState.linesDisplayed = prev.linesDisplayed.concat(currentCodeFile.slice(prev.linesOfCurrentCodeFileDisplayed, prev.linesOfCurrentCodeFileDisplayed + linesInc));
+        newState.linesOfCurrentCodeFileDisplayed += linesInc;
       } else {
-        const numOfElementsFromNextFile = prevLinesDisplayedLength + linesInc - codes[prev.currentCodeIndex].length;
+        const nextCodeIndex = prev.currentCodeIndex + 1 === codes.length ? 0 : prev.currentCodeIndex + 1;
+        const nexcCodeFile = codes[prev.codesOrder[nextCodeIndex]];
+        const numOfElementsFromNextFile = newState.linesOfCurrentCodeFileDisplayed + linesInc - currentCodeFile.length;
 
         newState.currentCodeIndex = nextCodeIndex;
-
-        console.log({prevLinesDisplayedLength, linesInc, codeLength: codes[prev.currentCodeIndex].length, numOfElementsFromNextFile },
-          codes[prev.currentCodeIndex].slice(prevLinesDisplayedLength, codes[prev.currentCodeIndex].length),
-          codes[nextCodeIndex].slice(0, numOfElementsFromNextFile)
-        )
         newState.linesDisplayed = [
           ...prev.linesDisplayed,
-          ...codes[prev.currentCodeIndex].slice(prevLinesDisplayedLength, codes[prev.currentCodeIndex].length),
-          ...codes[nextCodeIndex].slice(0, numOfElementsFromNextFile)
+          ...currentCodeFile.slice(prev.linesOfCurrentCodeFileDisplayed, currentCodeFile.length),
+          { text: '\n==========NEW FILE==========\n\n', className: 'shj-syn-insert' },
+          ...nexcCodeFile.slice(0, numOfElementsFromNextFile)
         ];
+        newState.linesOfCurrentCodeFileDisplayed = numOfElementsFromNextFile;
       }
-
+      console.log({newState})
       return newState;
     })
   }, [linesCount]);
@@ -87,7 +88,7 @@ function Typer() {
   return (
     <div className="flex flex-col w-full h-screen overflow-hidden">
       <div className="flex w-auto h-10 border border-solid border-black">
-        Lines: {Math.floor(linesCount)}
+        Lines: {linesCount}
       </div>
       <div ref={codeWindowRef} className="shj-lang-js h-full w-auto overflow-hidden text-wrap">
         {displayState.linesDisplayed.map(({ className, text }, index) => (
