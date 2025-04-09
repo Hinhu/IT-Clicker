@@ -1,14 +1,7 @@
-import { useContext } from 'react';
-import { LinesDispatchContext } from '../components/LinesProvider';
+import useLinesStore from '../store';
 
 function useLinesKeyboardClick() {
-  const dispatch = useContext(LinesDispatchContext);
-
-  if (!dispatch) {
-    throw new Error('useLinesIncrement used outside LinesProvider')
-  }
-
-  return () => dispatch({ type: 'click' });
+  return useLinesStore((state) => state.click);
 }
 
 export default useLinesKeyboardClick;

@@ -1,14 +1,7 @@
-import { useContext } from 'react';
-import { LinesDispatchContext } from '../components/LinesProvider';
+import useLinesStore from '../store';
 
 function useLinesIncrement() {
-  const dispatch = useContext(LinesDispatchContext);
-
-  if (!dispatch) {
-    throw new Error('useLinesIncrement used outside LinesProvider')
-  }
-
-  return () => dispatch({ type: 'increment' });
+  return useLinesStore((state) => state.increment);
 }
 
 export default useLinesIncrement;

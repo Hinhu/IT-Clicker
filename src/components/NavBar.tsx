@@ -1,22 +1,41 @@
 import React from 'react';
+import { ITEM_NAMES } from '../consts';
+import { ItemName } from '../types';
+import useItemStats from '../hooks/useItemStats';
+import useBuyItem from '../hooks/useBuyItem';
 
-function Item() {
-  return (
-    <div className="flex p-[10px] border border-dashed border-black bg-slate-300 transition-colors duration-75 active:bg-slate-500">
-      Item
-    </div>
-  )
+type ItemProps = {
+  name: ItemName
 }
 
-function NavBar() {
+const Item = React.memo(function Item({ name }: ItemProps) {
+  const { count, price, itemsAbleToBuy } = useItemStats(name);
+  const buyItem = useBuyItem(name);
+  const canBuy = itemsAbleToBuy > 0;
+  
+  console.log({ count, price, itemsAbleToBuy })
 
   return (
-    <div className="flex flex-col border border-solid border-black h-screen w-52 flex-grow-0">
-      <Item />
-      <Item />
-      <Item />
-      <Item />
+    <div
+    className={`flex justify-between p-[10px] border border-dashed border-black bg-slate-300 ${canBuy ? "cursor-pointer transition-colors duration-75 active:bg-slate-500" : "text-slate-500"}`}
+    onClick={() => canBuy ? buyItem() : null}
+    >
+      <div className="flex">
+        {name}: {count}
+      </div>
+      <div className="flex font-bold">
+        {price}
+      </div>
+    </div>
+  )
+})
 
+function NavBar() {
+  return (
+    <div className="flex flex-col border border-solid border-black h-screen w-52 flex-grow-0">
+      {ITEM_NAMES.map((itemName, index) => (
+        <Item name={itemName} key={index} />
+      ))}
     </div>
   )
 }
