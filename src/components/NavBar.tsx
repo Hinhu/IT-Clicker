@@ -12,8 +12,6 @@ const Item = React.memo(function Item({ name }: ItemProps) {
   const { count, price, itemsAbleToBuy } = useItemStats(name);
   const buyItem = useBuyItem(name);
   const canBuy = itemsAbleToBuy > 0;
-  
-  console.log({ count, price, itemsAbleToBuy })
 
   return (
     <div
