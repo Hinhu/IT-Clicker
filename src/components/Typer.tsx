@@ -30,7 +30,10 @@ function Typer() {
     setDisplayState((prev) => ({ ...prev, codesOrder: shuffle(indexes) }));
   }, []);
 
-  const handleUserKeyPress = useCallback(() => {
+  const handleUserKeyPress = useCallback((e: KeyboardEvent) => {
+    if (e.repeat) {
+      return;
+    }
     keyboardLinesIncrement();
   }, [keyboardLinesIncrement]);
 
