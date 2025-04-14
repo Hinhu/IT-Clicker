@@ -10,7 +10,7 @@ type ItemProps = {
 }
 
 const Item = React.memo(function Item({ name, buyingMode }: ItemProps) {
-  const { count, price, itemsAbleToBuy } = useItemStats(name);
+  const { count, price, itemsAbleToBuy } = useItemStats(name, buyingMode);
   const buyItem = useBuyItem(name);
   const canBuy = itemsAbleToBuy > 0;
 
@@ -24,7 +24,7 @@ const Item = React.memo(function Item({ name, buyingMode }: ItemProps) {
           {name}: {count}
         </div>
         <div className="flex font-bold select-none">
-          {price * (buyingMode === 'MAX' ? itemsAbleToBuy : buyingMode)}
+          {price}
         </div>
       </div>
       <div className="flex justify-end">

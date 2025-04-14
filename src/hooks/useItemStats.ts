@@ -2,16 +2,16 @@ import { useShallow } from 'zustand/react/shallow';
 
 import { ITEMS_CONFIG } from '../consts';
 import useLinesStore from '../store';
-import { ItemName, ItemCounts } from '../types';
+import { BuyingMode, ItemName } from '../types';
 
-function useItemsStats(itemName: ItemName) {
-  const { count, itemsAbleToBuy } = useLinesStore(useShallow((state) => ({
-    count: state[(itemName + "Count") as keyof ItemCounts],
-    itemsAbleToBuy: state[(itemName + "CountAbleToBuy") as keyof ItemCounts]
+function useItemsStats(itemName: ItemName, itemsToBuyCount: BuyingMode) {
+  const { itemCount, itemsAbleToBuy } = useLinesStore(useShallow((state) => ({
+    itemCount: state.itemCounts[itemName],
+    itemsAbleToBuy: state.itemsAbleToBuy[itemName]
   })));
-  const price = ITEMS_CONFIG[itemName].getPrice(count);
+  const price = ITEMS_CONFIG[itemName].getItemsPrice(itemCount, itemsToBuyCount ==='MAX' ? itemsAbleToBuy : itemsToBuyCount);
 
-  return { count, price, itemsAbleToBuy };
+  return { count: itemCount, price, itemsAbleToBuy };
 }
 
 export default useItemsStats;
