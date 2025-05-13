@@ -1,0 +1,4 @@
+
+[submodule "codePreper/repos/pong"]
+	path = codePreper/repos/pong
+	url = git@github.com:Hinhu/PongJS.git
