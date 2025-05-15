@@ -4,33 +4,48 @@ import codes from '../assets/code.json';
 import useLinesCount from '../hooks/useLinesCount';
 import useLinesIncrement from '../hooks/useLinesIncrement';
 import useLinesKeyboardClick from '../hooks/useLinesKeyboardClick';
-import useEarnedLines from '../hooks/useEarnedLines';
 import useLinesIncrementValue from '../hooks/useLinesIncrementValue';
+
+const BASE_UPDATE_DELAY = 10000;
+const MIN_UPDATE_DELAY = 10;
 
 function Typer() {
   const linesCount = useLinesCount();
-  const earnedLines = useEarnedLines();
   const linesInc = useLinesIncrementValue();
   const incrementLines = useLinesIncrement();
   const keyboardLinesIncrement = useLinesKeyboardClick();
   const [displayState, setDisplayState] = useState<{
     linesDisplayed: { className: string, text: string }[],
     linesDisplayedCount: number,
-    linesOfCurrentCodeFileDisplayed: number
+    linesOfCurrentCodeFileDisplayed: number,
+    updateDelay: number
   }>({
     linesDisplayed: [],
     linesDisplayedCount: 0,
-    linesOfCurrentCodeFileDisplayed: 0
+    linesOfCurrentCodeFileDisplayed: 0,
+    updateDelay: 0
   });
   const codeWindowRef = useRef<HTMLDivElement | null>(null);
 
+  const addCodeSymbolToDisplay = useCallback(() => {
+    setDisplayState((prev) => {
+      const newState = { ...prev };
+
+      newState.linesDisplayedCount += 1;
+      newState.linesDisplayed = prev.linesDisplayed.concat(codes.slice(prev.linesOfCurrentCodeFileDisplayed, prev.linesOfCurrentCodeFileDisplayed + 1));
+      newState.linesOfCurrentCodeFileDisplayed += 1;
+
+      return newState;
+    });
+  }, []);
 
   const handleUserKeyPress = useCallback((e: KeyboardEvent) => {
     if (e.repeat) {
       return;
     }
     keyboardLinesIncrement();
-  }, [keyboardLinesIncrement]);
+    addCodeSymbolToDisplay();
+  }, [keyboardLinesIncrement, addCodeSymbolToDisplay]);
 
   useEffect(() => {
     window.addEventListener("keydown", handleUserKeyPress);
@@ -50,20 +65,23 @@ function Typer() {
   }, [incrementLines]);
 
   useEffect(() => {
-    setDisplayState((prev) => {
-      const newState = { ...prev };
-      const ticLinesInc = Math.floor(earnedLines) - prev.linesDisplayedCount;
-      const currentCodeFile = codes;
+    setDisplayState((prev) => ({
+      ...prev,
+      updateDelay: linesInc > 0 ? Math.max(MIN_UPDATE_DELAY, Math.floor(BASE_UPDATE_DELAY / linesInc)) : 0
+    }));
+  }, [linesInc]);
 
-      newState.linesDisplayedCount += ticLinesInc;
+  useEffect(() => {
+    let timer: NodeJS.Timer;
 
-      newState.linesDisplayed = prev.linesDisplayed.concat(currentCodeFile.slice(prev.linesOfCurrentCodeFileDisplayed, prev.linesOfCurrentCodeFileDisplayed + ticLinesInc));
-      newState.linesOfCurrentCodeFileDisplayed += ticLinesInc;
+    if (displayState.updateDelay) {
+      timer = setInterval(() => {
+        addCodeSymbolToDisplay();
+      }, displayState.updateDelay);
+    }
 
-      return newState;
-    })
-  }, [earnedLines]);
-
+    return () => clearInterval(timer);
+  }, [displayState.updateDelay, addCodeSymbolToDisplay]);
 
   useEffect(() => {
     if (codeWindowRef.current) {
@@ -78,7 +96,7 @@ function Typer() {
       </div>
       <div ref={codeWindowRef} className="shj-lang-js h-full w-auto overflow-hidden text-wrap">
         {displayState.linesDisplayed.map(({ className, text }, index) => (
-          <span className={className} key={index}>{text}</span>
+          <span className={className} key={window.performance.now() + index}>{text}</span>
         ))}
       </div>
     </div>

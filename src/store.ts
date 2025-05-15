@@ -32,7 +32,7 @@ const useLinesStore = create<LinesState>((set) => ({
       const price = ITEMS_CONFIG[itemName].getItemsPrice(state.itemCounts[itemName], prepedCount);
 
       if (state.linesCount < price) {
-        throw new Error(`You can't afford ${prepedCount} ${itemName}`);
+        return state;
       }
 
       const newState = { ...state };
