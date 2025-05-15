@@ -12,7 +12,7 @@ type ItemProps = {
 const Item = React.memo(function Item({ name, buyingMode }: ItemProps) {
   const { count, price, itemsAbleToBuy } = useItemStats(name, buyingMode);
   const buyItem = useBuyItem(name);
-  const canBuy = itemsAbleToBuy > 0;
+  const canBuy = buyingMode === 'MAX' ? itemsAbleToBuy > 0 : itemsAbleToBuy >= buyingMode;
 
   return (
     <div

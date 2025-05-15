@@ -27,6 +27,8 @@ function findFilesInDir(startPath, filter) {
 
 const EXTENTIONS = [
   '.js',
+  '.css',
+  '.html'
 ];
 
 const codePaths = EXTENTIONS.reduce((acc, ext) => acc.concat(findFilesInDir('./repos', ext)), []);
@@ -38,12 +40,12 @@ for (let codePath of codePaths) {
 
   const parsedHtml = parse(html);
 
-  const codeMap = parsedHtml.childNodes[0].childNodes[1].childNodes.map((node) => ({
+  const codeMap = parsedHtml.childNodes[0].childNodes[1].childNodes.reduce((result, node) => ([...result, ...node.text.split('').map((c) => ({
     className: ((className) => className || 'shj-syn-oper')(node.getAttribute && node.getAttribute('class')),
-    text: node.text
-  }))
+    text: c
+  }))]), [])
 
-  prepedCodes = [...prepedCodes, codeMap];
+  prepedCodes = [...prepedCodes, ...codeMap];
 }
 
 

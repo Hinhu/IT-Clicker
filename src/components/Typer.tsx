@@ -1,34 +1,29 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import '../css/speed-highlight-override.css';
-import shuffle from '../utils/shuffle';
 import codes from '../assets/code.json';
 import useLinesCount from '../hooks/useLinesCount';
 import useLinesIncrement from '../hooks/useLinesIncrement';
 import useLinesKeyboardClick from '../hooks/useLinesKeyboardClick';
+import useEarnedLines from '../hooks/useEarnedLines';
+import useLinesIncrementValue from '../hooks/useLinesIncrementValue';
 
 function Typer() {
   const linesCount = useLinesCount();
+  const earnedLines = useEarnedLines();
+  const linesInc = useLinesIncrementValue();
   const incrementLines = useLinesIncrement();
   const keyboardLinesIncrement = useLinesKeyboardClick();
   const [displayState, setDisplayState] = useState<{
-    codesOrder: number[],
-    currentCodeIndex: number,
     linesDisplayed: { className: string, text: string }[],
     linesDisplayedCount: number,
     linesOfCurrentCodeFileDisplayed: number
   }>({
-    codesOrder: [],
-    currentCodeIndex: 0,
     linesDisplayed: [],
     linesDisplayedCount: 0,
     linesOfCurrentCodeFileDisplayed: 0
   });
   const codeWindowRef = useRef<HTMLDivElement | null>(null);
 
-  useEffect(() => {
-    const indexes = Array.from(Array(codes.length).keys());
-    setDisplayState((prev) => ({ ...prev, codesOrder: shuffle(indexes) }));
-  }, []);
 
   const handleUserKeyPress = useCallback((e: KeyboardEvent) => {
     if (e.repeat) {
@@ -57,32 +52,17 @@ function Typer() {
   useEffect(() => {
     setDisplayState((prev) => {
       const newState = { ...prev };
-      const linesInc = Math.floor(linesCount) - prev.linesDisplayedCount;
-      const currentCodeFile = codes[prev.codesOrder[prev.currentCodeIndex]];
+      const ticLinesInc = Math.floor(earnedLines) - prev.linesDisplayedCount;
+      const currentCodeFile = codes;
 
-      newState.linesDisplayedCount += linesInc;
+      newState.linesDisplayedCount += ticLinesInc;
 
-      if (prev.linesOfCurrentCodeFileDisplayed + linesInc < currentCodeFile.length) {
-        newState.linesDisplayed = prev.linesDisplayed.concat(currentCodeFile.slice(prev.linesOfCurrentCodeFileDisplayed, prev.linesOfCurrentCodeFileDisplayed + linesInc));
-        newState.linesOfCurrentCodeFileDisplayed += linesInc;
-      } else {
-        const nextCodeIndex = prev.currentCodeIndex + 1 === codes.length ? 0 : prev.currentCodeIndex + 1;
-        const nexcCodeFile = codes[prev.codesOrder[nextCodeIndex]];
-        const numOfElementsFromNextFile = newState.linesOfCurrentCodeFileDisplayed + linesInc - currentCodeFile.length;
-
-        newState.currentCodeIndex = nextCodeIndex;
-        newState.linesDisplayed = [
-          ...prev.linesDisplayed,
-          ...currentCodeFile.slice(prev.linesOfCurrentCodeFileDisplayed, currentCodeFile.length),
-          { text: '\n==========NEW FILE==========\n\n', className: 'shj-syn-insert' },
-          ...nexcCodeFile.slice(0, numOfElementsFromNextFile)
-        ];
-        newState.linesOfCurrentCodeFileDisplayed = numOfElementsFromNextFile;
-      }
+      newState.linesDisplayed = prev.linesDisplayed.concat(currentCodeFile.slice(prev.linesOfCurrentCodeFileDisplayed, prev.linesOfCurrentCodeFileDisplayed + ticLinesInc));
+      newState.linesOfCurrentCodeFileDisplayed += ticLinesInc;
 
       return newState;
     })
-  }, [linesCount]);
+  }, [earnedLines]);
 
 
   useEffect(() => {
@@ -94,7 +74,7 @@ function Typer() {
   return (
     <div className="flex flex-col w-full h-screen overflow-hidden">
       <div className="flex w-auto h-10 border border-solid border-black">
-        Lines: {linesCount}
+        Lines: {linesCount} Lines/s: {linesInc}
       </div>
       <div ref={codeWindowRef} className="shj-lang-js h-full w-auto overflow-hidden text-wrap">
         {displayState.linesDisplayed.map(({ className, text }, index) => (

@@ -34,6 +34,7 @@ export type Actions = {
 export type LinesState = {
   actions: Actions,
   linesCount: number,
+  earnedLines: number,
   linesInc: number,
   itemCounts: ItemsNumMap,
   itemsAbleToBuy: ItemsNumMap
