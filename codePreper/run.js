@@ -40,10 +40,10 @@ for (let codePath of codePaths) {
 
   const parsedHtml = parse(html);
 
-  const codeMap = parsedHtml.childNodes[0].childNodes[1].childNodes.reduce((result, node) => ([...result, ...node.text.split('').map((c) => ({
+  const codeMap = parsedHtml.childNodes[0].childNodes[1].childNodes.map((node) => ({
     className: ((className) => className || 'shj-syn-oper')(node.getAttribute && node.getAttribute('class')),
-    text: c
-  }))]), [])
+    text: node.text
+  }))
 
   prepedCodes = [...prepedCodes, ...codeMap];
 }

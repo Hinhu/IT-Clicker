@@ -6,8 +6,10 @@ import useLinesIncrement from '../hooks/useLinesIncrement';
 import useLinesKeyboardClick from '../hooks/useLinesKeyboardClick';
 import useLinesIncrementValue from '../hooks/useLinesIncrementValue';
 
-const BASE_UPDATE_DELAY = 10000;
+const INCREMENT_DELAY = 1000;
+const BASE_UPDATE_DELAY = 10;
 const MIN_UPDATE_DELAY = 10;
+const MAX_LINES_DISPLAYED = 30;
 
 function Typer() {
   const linesCount = useLinesCount();
@@ -15,14 +17,16 @@ function Typer() {
   const incrementLines = useLinesIncrement();
   const keyboardLinesIncrement = useLinesKeyboardClick();
   const [displayState, setDisplayState] = useState<{
-    linesDisplayed: { className: string, text: string }[],
+    tokensDisplayed: { className: string, text: string, hasNewLineSymbol: boolean }[],
     linesDisplayedCount: number,
-    linesOfCurrentCodeFileDisplayed: number,
+    charsOfCurrentTokenDisplayed: number,
+    currentTokenIndex: number,
     updateDelay: number
   }>({
-    linesDisplayed: [],
+    tokensDisplayed: [],
     linesDisplayedCount: 0,
-    linesOfCurrentCodeFileDisplayed: 0,
+    charsOfCurrentTokenDisplayed: 0,
+    currentTokenIndex: 0,
     updateDelay: 0
   });
   const codeWindowRef = useRef<HTMLDivElement | null>(null);
@@ -31,9 +35,48 @@ function Typer() {
     setDisplayState((prev) => {
       const newState = { ...prev };
 
-      newState.linesDisplayedCount += 1;
-      newState.linesDisplayed = prev.linesDisplayed.concat(codes.slice(prev.linesOfCurrentCodeFileDisplayed, prev.linesOfCurrentCodeFileDisplayed + 1));
-      newState.linesOfCurrentCodeFileDisplayed += 1;
+      newState.linesDisplayedCount++;
+      if (newState.currentTokenIndex === 0 && newState.charsOfCurrentTokenDisplayed === 0) {
+        const newSymbol = codes[0].text[0];
+        newState.tokensDisplayed = prev.tokensDisplayed.concat({
+          className: codes[0].className,
+          text: newSymbol,
+          hasNewLineSymbol: newSymbol === '\n'
+        });
+      } else if (prev.charsOfCurrentTokenDisplayed >= codes[prev.currentTokenIndex].text.length) {
+        newState.charsOfCurrentTokenDisplayed = 0;
+        newState.currentTokenIndex++;
+        const newSymbol = codes[newState.currentTokenIndex].text[newState.charsOfCurrentTokenDisplayed];
+        newState.tokensDisplayed = prev.tokensDisplayed.concat({
+          className: codes[newState.currentTokenIndex].className,
+          text: newSymbol,
+          hasNewLineSymbol: newSymbol === '\n'
+        });
+      } else {
+        const newSymbol = codes[newState.currentTokenIndex].text[newState.charsOfCurrentTokenDisplayed];
+        newState.tokensDisplayed[newState.tokensDisplayed.length - 1].text = prev.tokensDisplayed[newState.tokensDisplayed.length - 1].text
+          .concat(codes[newState.currentTokenIndex].text[newState.charsOfCurrentTokenDisplayed]);
+        if (newSymbol === '\n') {
+          newState.tokensDisplayed[newState.tokensDisplayed.length - 1].hasNewLineSymbol = true;
+        }
+      }
+      newState.charsOfCurrentTokenDisplayed++;
+
+      const linesOfTokensDisplayed = newState.tokensDisplayed.reduce((result, token) => result + (token.hasNewLineSymbol ? 1 : 0), 0);
+
+      if (linesOfTokensDisplayed > MAX_LINES_DISPLAYED) {
+        console.log({linesOfTokensDisplayed})
+        let linesToDelete = linesOfTokensDisplayed - MAX_LINES_DISPLAYED;
+
+        while (linesToDelete > 0) {
+          let deletedToken = newState.tokensDisplayed.shift();
+
+          if (deletedToken?.hasNewLineSymbol) {
+            linesToDelete--;
+          }
+        }
+        console.log()
+      }
 
       return newState;
     });
@@ -59,7 +102,7 @@ function Typer() {
 
     timer = setInterval(() => {
       incrementLines();
-    }, 1000);
+    }, INCREMENT_DELAY);
 
     return () => clearInterval(timer);
   }, [incrementLines]);
@@ -85,9 +128,9 @@ function Typer() {
 
   useEffect(() => {
     if (codeWindowRef.current) {
-      codeWindowRef.current.lastElementChild?.scrollIntoView(false);
+      //codeWindowRef.current.lastElementChild?.scrollIntoView(false);
     }
-  }, [displayState.linesDisplayed])
+  }, [displayState.tokensDisplayed.length])
 
   return (
     <div className="flex flex-col w-full h-screen overflow-hidden">
@@ -95,7 +138,7 @@ function Typer() {
         Lines: {linesCount} Lines/s: {linesInc}
       </div>
       <div ref={codeWindowRef} className="shj-lang-js h-full w-auto overflow-hidden text-wrap">
-        {displayState.linesDisplayed.map(({ className, text }, index) => (
+        {displayState.tokensDisplayed.map(({ className, text }, index) => (
           <span className={className} key={window.performance.now() + index}>{text}</span>
         ))}
       </div>

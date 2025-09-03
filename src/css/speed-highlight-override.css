@@ -2,12 +2,11 @@
   white-space: pre;
   color: #112;
   text-shadow: none;
-  box-sizing: border-box;
-  background: #fff;
   max-width: min(100%, 100vw);
   margin: 0;
-  padding: 30px 20px;
-  font: 18px/24px Consolas, Courier New, Monaco, Andale Mono, Ubuntu Mono, monospace;
+  padding: 5px 20px;
+  font: Consolas, Courier New, Monaco, Andale Mono, Ubuntu Mono, monospace;
+  font-size: 100%;
 }
 
 .shj-inline {
